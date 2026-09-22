@@ -1,0 +1,7 @@
+.form-error{min-height:18px;color:#ff8077;font-size:11px}
+.cms-form{grid-template-columns:1fr 90px 90px 1fr auto}
+.cms-form select{background:#090b0e;border:1px solid #34373d;color:#fff;padding:11px 13px}
+#animeVideo[hidden]{display:none}
+.stage .frame[hidden],.stage .shade[hidden],.stage .movie-title[hidden],.stage .quote[hidden],.stage .controls[hidden]{display:none}
+.cards article:focus-visible{outline:2px solid #f47521;outline-offset:3px}
+@media(max-width:760px){.cms-form{grid-template-columns:1fr}}

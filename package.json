@@ -1,0 +1,17 @@
+{
+  "name": "kitsune-streaming",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "migrate": "node server/migrate.js",
+    "check": "node --check server/index.js && node --check server/auth.js && node --check server/catalog.js && node --check server/admin.js && node --check server/migrate.js"
+  },
+  "dependencies": {
+    "express": "5.2.1",
+    "pg": "8.23.0"
+  }
+}
