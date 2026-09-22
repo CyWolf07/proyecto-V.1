@@ -1,0 +1,13 @@
+.obsidian/
+.engram/
+ChatGPT_MD/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+.env
+.env.*
+node_modules/
+dist/
+build/
+.vercel/

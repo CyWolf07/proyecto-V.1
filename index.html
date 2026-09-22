@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08090b" />
+  <title>Kitsune — Anime sin límites</title>
+  <script>window.location.replace('plataforma.html');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Kitsune inicio"><span class="brand-mark">K</span><span>KITSUNE</span></a>
+    <nav class="desktop-nav" aria-label="Principal">
+      <a class="active" href="#inicio">Inicio</a><a href="#catalogo">Catálogo</a><a href="#novedades">Novedades</a><a href="#simulcast">Simulcast</a>
+    </nav>
+    <div class="actions">
+      <button class="icon-btn search-trigger" aria-label="Buscar"><svg><use href="#search"/></svg></button>
+      <button class="icon-btn" aria-label="Notificaciones"><svg><use href="#bell"/></svg><i></i></button>
+      <button class="avatar" aria-label="Abrir perfil">JO</button>
+    </div>
+  </header>
+
+  <main id="inicio">
+    <section class="hero">
+      <div class="hero-bg"></div><div class="grain"></div>
+      <div class="hero-copy">
+        <span class="eyebrow"><b></b> NUEVO ESTRENO · EP. 01</span>
+        <h1>ASTRAL<br><em>EDGE</em></h1>
+        <p class="meta"><span class="match">98% para ti</span><span>2026</span><span>16+</span><span>24 min</span><span class="quality">4K</span></p>
+        <p class="synopsis">En una ciudad suspendida sobre el vacío, Kaede deberá empuñar la última hoja estelar antes de que el cielo recuerde su verdadero nombre.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="plataforma.html"><svg><use href="#play"/></svg> Ver episodio 1</a>
+          <button class="btn secondary" data-list><svg><use href="#plus"/></svg> Mi lista</button>
+          <button class="round" aria-label="Más información"><svg><use href="#info"/></svg></button>
+        </div>
+      </div>
+      <div class="hero-index"><span>01</span><i></i><span>04</span></div>
+      <button class="sound-btn" aria-label="Activar sonido"><svg><use href="#volume"/></svg></button>
+      <a class="scroll-hint" href="#continuar">DESCUBRIR <i></i></a>
+    </section>
+
+    <section class="content" id="continuar">
+      <div class="section-head"><div><span class="kicker">VOLVER A LA ACCIÓN</span><h2>Continuar viendo</h2></div><a href="#">Ver todo <span>→</span></a></div>
+      <div class="continue-grid">
+        <article class="continue-card" style="--scene: linear-gradient(120deg,#18233a,#733827 55%,#131417)"><div class="scene scene-one"><span>炎</span></div><button class="card-play" aria-label="Reproducir"><svg><use href="#play"/></svg></button><div class="episode"><p>Crónicas del fuego</p><span>T1 E8 · El juramento escarlata</span></div><div class="progress"><i style="width:72%"></i></div><small>17 min restantes</small></article>
+        <article class="continue-card" style="--scene: linear-gradient(130deg,#142327,#245b64 52%,#090d12)"><div class="scene scene-two"><span>海</span></div><button class="card-play" aria-label="Reproducir"><svg><use href="#play"/></svg></button><div class="episode"><p>Blue Horizon</p><span>T2 E3 · Más allá de la marea</span></div><div class="progress"><i style="width:41%"></i></div><small>14 min restantes</small></article>
+        <article class="continue-card" style="--scene: linear-gradient(120deg,#2c1a3a,#765378 55%,#0e0c12)"><div class="scene scene-three"><span>夢</span></div><button class="card-play" aria-label="Reproducir"><svg><use href="#play"/></svg></button><div class="episode"><p>Ciudad Onírica</p><span>T1 E11 · Nunca despiertes</span></div><div class="progress"><i style="width:88%"></i></div><small>4 min restantes</small></article>
+      </div>
+    </section>
+
+    <section class="content rail-section" id="catalogo">
+      <div class="section-head"><div><span class="kicker">LO QUE TODOS ESTÁN VIENDO</span><h2>Tendencias de la semana</h2></div><div class="rail-controls"><button data-scroll="-1">←</button><button data-scroll="1">→</button></div></div>
+      <div class="poster-rail">
+        <article class="poster-card"><div class="poster p1"><span class="rank">01</span><span class="badge">TOP 10</span><button class="quick-add"><svg><use href="#plus"/></svg></button></div><h3>Ronin: Último amanecer</h3><p>Acción · Drama</p></article>
+        <article class="poster-card"><div class="poster p2"><span class="rank">02</span><span class="badge new">NUEVO</span><button class="quick-add"><svg><use href="#plus"/></svg></button></div><h3>Neon Requiem</h3><p>Sci‑Fi · Misterio</p></article>
+        <article class="poster-card"><div class="poster p3"><span class="rank">03</span><button class="quick-add"><svg><use href="#plus"/></svg></button></div><h3>Los hijos del eclipse</h3><p>Fantasía · Aventura</p></article>
+        <article class="poster-card"><div class="poster p4"><span class="rank">04</span><span class="badge">TOP 10</span><button class="quick-add"><svg><use href="#plus"/></svg></button></div><h3>Blade Symphony</h3><p>Acción · Música</p></article>
+        <article class="poster-card"><div class="poster p5"><span class="rank">05</span><button class="quick-add"><svg><use href="#plus"/></svg></button></div><h3>Jardín de ceniza</h3><p>Romance · Drama</p></article>
+      </div>
+    </section>
+
+    <section class="featured" id="novedades"><div class="featured-art"></div><div class="featured-copy"><span class="kicker">ESTRENO EXCLUSIVO</span><h2>Donde termina<br>la <em>luz</em></h2><p>Dos hermanas. Un imperio en ruinas. Una promesa capaz de cambiar el destino de ambos mundos.</p><div class="featured-meta"><span>★ 4.9</span><span>Drama</span><span>Fantasía</span></div><button class="btn primary"><svg><use href="#play"/></svg> Ver ahora</button></div></section>
+
+    <section class="content genre-section" id="simulcast"><div class="section-head"><div><span class="kicker">ENCUENTRA TU PRÓXIMA HISTORIA</span><h2>Explora por género</h2></div></div><div class="genres"><a href="#"><strong>Acción</strong><span>124 títulos →</span></a><a href="#"><strong>Fantasía</strong><span>89 títulos →</span></a><a href="#"><strong>Romance</strong><span>76 títulos →</span></a><a href="#"><strong>Sci‑Fi</strong><span>51 títulos →</span></a></div></section>
+  </main>
+
+  <footer><a class="brand" href="#"><span class="brand-mark">K</span><span>KITSUNE</span></a><p>Tu próxima historia empieza aquí.</p><span>© 2026 Kitsune Streaming</span></footer>
+
+  <div class="search-panel" aria-hidden="true"><button class="search-close">×</button><div><span class="kicker">BUSCAR EN KITSUNE</span><input type="search" placeholder="¿Qué quieres ver?" aria-label="Buscar anime"><p>Prueba con: acción, fantasía, romance...</p></div></div>
+  <div class="toast" role="status">Añadido a Mi lista</div>
+
+  <svg class="symbols" aria-hidden="true"><symbol id="play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol><symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></symbol><symbol id="bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol><symbol id="info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol><symbol id="volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4zM15 9l5 6M20 9l-5 6"/></symbol></svg>
+  <script src="app.js"></script>
+</body>
+</html>
