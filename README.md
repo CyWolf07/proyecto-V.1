@@ -30,6 +30,12 @@ Abra `http://localhost:4173/`. Para pruebas sin recarga automática, use `npm st
 
 ## Despliegue en Render
 
+### Servicio existente configurado como Docker
+
+Si Render muestra `load build definition from Dockerfile`, ese servicio está configurado para Docker y no utiliza el `runtime: node` de `render.yaml`. El repositorio incluye ahora un `Dockerfile` en la raíz. Configure `DATABASE_URL`, `ADMIN_EMAIL` y `ADMIN_PASSWORD` como variables de entorno privadas del servicio y ejecute **Manual Deploy → Deploy latest commit**. No coloque credenciales en el Dockerfile ni en Git. El contenedor aplica las migraciones antes de iniciar la API y escucha el `PORT` proporcionado por Render.
+
+### Servicio nuevo mediante Blueprint Node
+
 1. Suba este repositorio a GitHub. En Render, cree un **Blueprint** desde el repositorio. El archivo [render.yaml](render.yaml) define un servicio web Node en la rama `main`, instala con `npm ci`, aplica migraciones al iniciar y usa `/api/health` como verificación.
 2. Configure en Render las variables privadas `DATABASE_URL`, `ADMIN_EMAIL` y `ADMIN_PASSWORD`. Use la URL del *session pooler* de Supabase; nunca la añada a GitHub ni a `render.yaml`. La contraseña administrativa debe ser nueva y robusta. Opcionalmente, configure `DATABASE_CA_FILE` con la ruta de un certificado CA de confianza si lo distribuye de forma segura en el servicio.
 3. Despliegue. Compruebe que `https://<su-servicio>.onrender.com/api/health` responde `{"status":"ok"}` y que aparecen siete series en el catálogo. Pruebe registro, salida e ingreso admin.
