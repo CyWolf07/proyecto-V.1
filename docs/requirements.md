@@ -9,7 +9,7 @@ Versión 0.2: catálogo de series, tráilers, cuentas, y CMS básico. Actores: v
 | ID | Prioridad | Requisito | Criterio de aceptación | Estado |
 |---|---|---|---|---|
 | RF-01 | Alta | Registrar usuarios con correo y contraseña | Alta válida crea usuario de rol `user`; correo repetido devuelve 409 | Implementado |
-| RF-02 | Alta | Iniciar/cerrar sesión | Cookie segura representa sesión persistida; cerrar sesión la invalida | Implementado |
+| RF-02 | Alta | Iniciar/cerrar sesión | Cookie segura representa sesión persistida; cerrar sesión la invalida; error de acceso enfoca correo o contraseña según corresponda | Implementado |
 | RF-03 | Alta | Ingreso separado de administrador | Sólo credenciales privadas del servicio crean sesión admin | Implementado |
 | RF-04 | Alta | Explorar catálogo y tráiler | Se muestran series publicadas y su material disponible | Implementado |
 | RF-05 | Alta | Administración de contenido | Admin puede crear series, cambiar estado y agregar episodios | Implementado |

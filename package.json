@@ -8,7 +8,7 @@
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
     "migrate": "node server/migrate.js",
-    "check": "node --check server/index.js && node --check server/auth.js && node --check server/catalog.js && node --check server/admin.js && node --check server/migrate.js"
+    "check": "node --check server/index.js && node --check server/auth.js && node --check server/catalog.js && node --check server/admin.js && node --check server/migrate.js && node --check plataforma.js && node --check admin-tools.js"
   },
   "dependencies": {
     "express": "5.2.1",

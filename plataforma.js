@@ -21,7 +21,11 @@ async function api(path, options = {}) {
     ...options,
   });
   const body = await response.json();
-  if (!response.ok) throw new Error(body.error || 'No se pudo completar la solicitud');
+  if (!response.ok) {
+    const error = new Error(body.error || 'No se pudo completar la solicitud');
+    error.field = body.field;
+    throw error;
+  }
   return body;
 }
 function renderSession() {
@@ -47,6 +51,24 @@ function go(id) {
   window.scrollTo(0, 0);
 }
 window.Kitsune = { api, go, refreshSession, reloadCatalog: loadCatalog, get user() { return currentUser; } };
+function clearAuthError(form) {
+  form.querySelectorAll('input').forEach(input => input.removeAttribute('aria-invalid'));
+  form.querySelector('[role="alert"]').textContent = '';
+}
+function showAuthError(form, cause) {
+  clearAuthError(form);
+  const input = ['email', 'password'].includes(cause.field) ? form.querySelector(`[name="${cause.field}"]`) : null;
+  if (input) {
+    input.setAttribute('aria-invalid', 'true');
+    input.focus();
+  }
+  form.querySelector('[role="alert"]').textContent = input
+    ? cause.field === 'email' ? 'Revisa el correo ingresado.' : 'Revisa la contraseña ingresada.'
+    : cause.message;
+}
+document.querySelectorAll('#loginForm,#registerForm,#adminLogin').forEach(form => {
+  form.addEventListener('input', event => { if (event.target.matches('input')) clearAuthError(form); });
+});
 document.querySelectorAll('[data-page]').forEach(button => button.addEventListener('click', () => go(button.dataset.page)));
 document.querySelectorAll('[data-form]').forEach(button => button.addEventListener('click', () => {
   document.querySelectorAll('[data-form],.form').forEach(item => item.classList.remove('on'));
@@ -56,27 +78,25 @@ document.querySelectorAll('[data-form]').forEach(button => button.addEventListen
 for (const form of document.querySelectorAll('#loginForm,#registerForm')) {
   form.addEventListener('submit', async event => {
     event.preventDefault();
-    const error = form.querySelector('.form-error');
-    error.textContent = '';
+    clearAuthError(form);
     const data = Object.fromEntries(new FormData(form));
     try {
       await api(form.id === 'loginForm' ? '/auth/login' : '/auth/register', { method: 'POST', body: JSON.stringify(data) });
       form.reset();
       await refreshSession();
       go('catalogo');
-    } catch (cause) { error.textContent = cause.message; }
+    } catch (cause) { showAuthError(form, cause); }
   });
 }
 document.querySelector('#adminLogin').addEventListener('submit', async event => {
   event.preventDefault();
-  const error = document.querySelector('#adminError');
-  error.textContent = '';
+  clearAuthError(event.target);
   try {
     await api('/auth/admin/login', { method: 'POST', body: JSON.stringify({ email: document.querySelector('#adminEmail').value, password: document.querySelector('#adminPassword').value }) });
     event.target.reset();
     await refreshSession();
     go('admin');
-  } catch (cause) { error.textContent = cause.message; }
+  } catch (cause) { showAuthError(event.target, cause); }
 });
 document.querySelector('#logoutButton').addEventListener('click', async () => {
   try { await api('/auth/logout', { method: 'POST' }); } finally { currentUser = null; renderSession(); go('catalogo'); }

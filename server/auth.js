@@ -8,6 +8,9 @@ const router = Router();
 const cookieName = 'kitsune_session';
 const lifetimeMs = 7 * 24 * 60 * 60 * 1000;
 const digest = value => createHash('sha256').update(value).digest('hex');
+const attempts = new Map();
+const attemptWindowMs = 15 * 60 * 1000;
+const maxAttempts = 12;
 
 async function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
@@ -20,6 +23,25 @@ async function verifyPassword(password, stored) {
   const actual = await scrypt(password, salt, 64);
   const old = Buffer.from(expected, 'hex');
   return old.length === actual.length && timingSafeEqual(old, actual);
+}
+const dummyPasswordHash = hashPassword(randomBytes(32).toString('hex'));
+function loginLimit(req, res, next) {
+  const now = Date.now();
+  const key = digest(req.ip || 'unknown');
+  const entry = attempts.get(key);
+  if (entry && entry.expiresAt > now && entry.count >= maxAttempts) {
+    return res.status(429).json({ error: 'Demasiados intentos. Prueba de nuevo en 15 minutos.' });
+  }
+  if (attempts.size > 10_000) {
+    for (const [storedKey, value] of attempts) if (value.expiresAt <= now) attempts.delete(storedKey);
+    while (attempts.size > 10_000) attempts.delete(attempts.keys().next().value);
+  }
+  req.recordLoginFailure = () => {
+    const current = attempts.get(key);
+    attempts.set(key, { count: current && current.expiresAt > now ? current.count + 1 : 1, expiresAt: current && current.expiresAt > now ? current.expiresAt : now + attemptWindowMs });
+  };
+  req.clearLoginFailures = () => attempts.delete(key);
+  next();
 }
 function equalSecret(a, b) {
   const x = Buffer.from(digest(a));
@@ -64,20 +86,32 @@ router.post('/register', async (req, res) => {
     throw error;
   }
 });
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimit, async (req, res) => {
   const email = String(req.body?.email || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Correo inválido', field: 'email' });
   const { rows } = await query('select id,email,display_name,role,password_hash,is_active from kitsune.users where email=$1', [email]);
-  if (!rows[0] || !rows[0].is_active || !(await verifyPassword(password, rows[0].password_hash))) return res.status(401).json({ error: 'Credenciales incorrectas' });
+  const passwordMatches = await verifyPassword(password, rows[0]?.password_hash || await dummyPasswordHash);
+  if (!rows[0] || !rows[0].is_active || !passwordMatches) {
+    req.recordLoginFailure();
+    return res.status(401).json({ error: 'Credenciales incorrectas', field: !rows[0] ? 'email' : 'password' });
+  }
+  req.clearLoginFailures();
   await createSession(res, rows[0].id, rows[0].role);
   const { password_hash: _, is_active: __, ...user } = rows[0];
   res.json({ user });
 });
-router.post('/admin/login', async (req, res) => {
+router.post('/admin/login', loginLimit, async (req, res) => {
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) return res.status(503).json({ error: 'Acceso administrativo no configurado' });
   const email = String(req.body?.email || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
-  if (!equalSecret(email, process.env.ADMIN_EMAIL.toLowerCase()) || !equalSecret(password, process.env.ADMIN_PASSWORD)) return res.status(401).json({ error: 'Credenciales incorrectas' });
+  const emailMatches = equalSecret(email, process.env.ADMIN_EMAIL.toLowerCase());
+  const passwordMatches = equalSecret(password, process.env.ADMIN_PASSWORD);
+  if (!emailMatches || !passwordMatches) {
+    req.recordLoginFailure();
+    return res.status(401).json({ error: 'Credenciales incorrectas', field: emailMatches ? 'password' : 'email' });
+  }
+  req.clearLoginFailures();
   await createSession(res, null, 'admin');
   res.json({ role: 'admin' });
 });

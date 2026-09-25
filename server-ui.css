@@ -1,4 +1,5 @@
 .form-error{min-height:18px;color:#ff8077;font-size:11px}
+.form input[aria-invalid="true"],.admin-login-form input[aria-invalid="true"]{border-color:#ff625a!important;outline:2px solid #ff625a;outline-offset:1px;box-shadow:0 0 0 2px rgba(255,98,90,.2)}
 .cms-form{grid-template-columns:1fr 90px 90px 1fr auto}
 .cms-form select{background:#090b0e;border:1px solid #34373d;color:#fff;padding:11px 13px}
 #animeVideo[hidden]{display:none}
