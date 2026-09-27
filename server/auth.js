@@ -2,6 +2,9 @@ import { Router } from 'express';
 import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
 import { query } from './db.js';
+import { loadConfig } from './config.js';
+
+const config = loadConfig();
 
 const scrypt = promisify(scryptCallback);
 const router = Router();
@@ -49,7 +52,7 @@ function equalSecret(a, b) {
   return timingSafeEqual(x, y);
 }
 function sessionCookie(res, token, maxAge = lifetimeMs) {
-  res.cookie(cookieName, token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge });
+  res.cookie(cookieName, token, { httpOnly: true, secure: config.production, sameSite: 'strict', path: '/', maxAge });
 }
 async function createSession(res, userId, role) {
   const token = randomBytes(32).toString('base64url');
@@ -102,11 +105,11 @@ router.post('/login', loginLimit, async (req, res) => {
   res.json({ user });
 });
 router.post('/admin/login', loginLimit, async (req, res) => {
-  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) return res.status(503).json({ error: 'Acceso administrativo no configurado' });
+  if (!config.adminEmail || !config.adminPassword) return res.status(503).json({ error: 'Acceso administrativo no configurado' });
   const email = String(req.body?.email || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
-  const emailMatches = equalSecret(email, process.env.ADMIN_EMAIL.toLowerCase());
-  const passwordMatches = equalSecret(password, process.env.ADMIN_PASSWORD);
+  const emailMatches = equalSecret(email, config.adminEmail);
+  const passwordMatches = equalSecret(password, config.adminPassword);
   if (!emailMatches || !passwordMatches) {
     req.recordLoginFailure();
     return res.status(401).json({ error: 'Credenciales incorrectas', field: emailMatches ? 'password' : 'email' });

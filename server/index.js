@@ -6,6 +6,9 @@ import { query, pool } from './db.js';
 import auth, { session } from './auth.js';
 import catalog from './catalog.js';
 import admin from './admin.js';
+import { loadConfig } from './config.js';
+
+const config = loadConfig();
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const app = express();
@@ -41,6 +44,6 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ error: 'Error interno' });
 });
 
-const port = Number(process.env.PORT || 4173);
+const port = config.port;
 const server = app.listen(port, '0.0.0.0', () => console.log(`Kitsune escuchando en ${port}`));
 process.on('SIGTERM', () => server.close(() => pool.end()));

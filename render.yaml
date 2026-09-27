@@ -13,8 +13,17 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: kitsune-postgres
+          property: connectionString
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
+
+databases:
+  - name: kitsune-postgres
+    plan: free
+    region: ohio
+    databaseName: kitsune
+    user: kitsune_app

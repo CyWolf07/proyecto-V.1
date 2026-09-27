@@ -1,13 +1,12 @@
 import pg from 'pg';
 import { readFileSync } from 'node:fs';
+import { loadConfig } from './config.js';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL no está configurada');
-}
+const config = loadConfig();
 
 export const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: Number(process.env.DB_POOL_MAX || 5),
+  connectionString: config.databaseUrl,
+  max: config.dbPoolMax,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 10_000,
   ssl: process.env.DATABASE_CA_FILE
