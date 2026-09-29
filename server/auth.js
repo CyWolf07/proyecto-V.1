@@ -3,6 +3,7 @@ import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } fr
 import { promisify } from 'node:util';
 import { query } from './db.js';
 import { loadConfig } from './config.js';
+import { createLoginLimit } from './login-limit.js';
 
 const config = loadConfig();
 
@@ -11,9 +12,7 @@ const router = Router();
 const cookieName = 'kitsune_session';
 const lifetimeMs = 7 * 24 * 60 * 60 * 1000;
 const digest = value => createHash('sha256').update(value).digest('hex');
-const attempts = new Map();
-const attemptWindowMs = 15 * 60 * 1000;
-const maxAttempts = 12;
+const loginLimit = createLoginLimit(query);
 
 async function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
@@ -28,24 +27,6 @@ async function verifyPassword(password, stored) {
   return old.length === actual.length && timingSafeEqual(old, actual);
 }
 const dummyPasswordHash = hashPassword(randomBytes(32).toString('hex'));
-function loginLimit(req, res, next) {
-  const now = Date.now();
-  const key = digest(req.ip || 'unknown');
-  const entry = attempts.get(key);
-  if (entry && entry.expiresAt > now && entry.count >= maxAttempts) {
-    return res.status(429).json({ error: 'Demasiados intentos. Prueba de nuevo en 15 minutos.' });
-  }
-  if (attempts.size > 10_000) {
-    for (const [storedKey, value] of attempts) if (value.expiresAt <= now) attempts.delete(storedKey);
-    while (attempts.size > 10_000) attempts.delete(attempts.keys().next().value);
-  }
-  req.recordLoginFailure = () => {
-    const current = attempts.get(key);
-    attempts.set(key, { count: current && current.expiresAt > now ? current.count + 1 : 1, expiresAt: current && current.expiresAt > now ? current.expiresAt : now + attemptWindowMs });
-  };
-  req.clearLoginFailures = () => attempts.delete(key);
-  next();
-}
 function equalSecret(a, b) {
   const x = Buffer.from(digest(a));
   const y = Buffer.from(digest(b));
@@ -96,10 +77,8 @@ router.post('/login', loginLimit, async (req, res) => {
   const { rows } = await query('select id,email,display_name,role,password_hash,is_active from kitsune.users where email=$1', [email]);
   const passwordMatches = await verifyPassword(password, rows[0]?.password_hash || await dummyPasswordHash);
   if (!rows[0] || !rows[0].is_active || !passwordMatches) {
-    req.recordLoginFailure();
     return res.status(401).json({ error: 'Credenciales incorrectas', field: !rows[0] ? 'email' : 'password' });
   }
-  req.clearLoginFailures();
   await createSession(res, rows[0].id, rows[0].role);
   const { password_hash: _, is_active: __, ...user } = rows[0];
   res.json({ user });
@@ -111,10 +90,8 @@ router.post('/admin/login', loginLimit, async (req, res) => {
   const emailMatches = equalSecret(email, config.adminEmail);
   const passwordMatches = equalSecret(password, config.adminPassword);
   if (!emailMatches || !passwordMatches) {
-    req.recordLoginFailure();
     return res.status(401).json({ error: 'Credenciales incorrectas', field: emailMatches ? 'password' : 'email' });
   }
-  req.clearLoginFailures();
   await createSession(res, null, 'admin');
   res.json({ role: 'admin' });
 });

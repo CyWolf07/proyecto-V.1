@@ -8,7 +8,7 @@ Navegador (HTML/CSS/JS)
   └─ API autenticada / CMS ────────────> Express en Render ──> esquema privado kitsune
 ```
 
-`server/index.js` aloja los recursos estáticos y monta la API. `auth.js` crea sesiones y controla roles, `catalog.js` sirve series, `admin.js` gestiona CMS y `db.js` limita el pool. `migrate.js` aplica SQL versionado con bloqueo asesor y transacciones. Las tablas del esquema privado son usuarios, sesiones, series, temporadas, episodios, progreso, auditoría y trabajos de medios.
+`server/index.js` aloja los recursos estáticos y monta la API. `auth.js` crea sesiones y controla roles, `catalog.js` sirve series, `admin.js` gestiona CMS y `db.js` limita el pool. `login-limit.js` reserva intentos de ingreso mediante una operación atómica en PostgreSQL y limpia contadores vencidos. `migrate.js` aplica SQL versionado con bloqueo asesor y transacciones. Las tablas del esquema privado son usuarios, sesiones, series, temporadas, episodios, progreso, auditoría, intentos de ingreso y trabajos de medios.
 
 ## Límites y estrategia de escalado
 
@@ -20,4 +20,4 @@ Navegador (HTML/CSS/JS)
 
 ## Seguridad
 
-El navegador nunca recibe la cadena de conexión. Express utiliza consultas parametrizadas y verifica roles en cada petición; los cambios de rol revocan sesiones existentes. El esquema `kitsune` no se expone a roles de API pública de Supabase. Antes de abrir a gran escala faltan límites distribuidos de intentos, verificación de correo, política de contenido y autenticación del certificado PostgreSQL mediante CA.
+El navegador nunca recibe la cadena de conexión. Express utiliza consultas parametrizadas y verifica roles en cada petición; los cambios de rol revocan sesiones existentes. El esquema `kitsune` no se expone a roles de API pública de Supabase. Los ingresos normales y administrativos comparten un contador por hash de IP que PostgreSQL actualiza antes de comprobar credenciales; un error de base impide el ingreso. Antes de abrir a gran escala faltan protección de abuso en el borde, controles por cuenta, verificación de correo, política de contenido y autenticación del certificado PostgreSQL mediante CA.

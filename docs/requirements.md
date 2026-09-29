@@ -29,7 +29,7 @@ Versión 0.2: catálogo de series, tráilers, cuentas, y CMS básico. Actores: v
 | RNF-04 | Health check real de base | `/api/health` responde 503 si PostgreSQL falla | Implementado |
 | RNF-05 | Capacidad medible | Prueba de carga y presupuesto p95 definidos antes de escalar | Pendiente |
 | RNF-06 | Resiliencia | Backups probados, métricas, alertas, recuperación | Pendiente |
-| RNF-07 | Seguridad de cuentas | Límite distribuido de intentos, verificación de correo y rotación de secretos | Pendiente |
+| RNF-07 | Seguridad de cuentas | Límite de ingresos distribuido por IP; aún faltan verificación de correo, protección en el borde y rotación de secretos | Parcial |
 | RNF-08 | Distribución multimedia | CDN/objeto para medios, HLS adaptativo y trabajadores independientes | Pendiente |
 
 ## Riesgos y decisiones
@@ -37,6 +37,7 @@ Versión 0.2: catálogo de series, tráilers, cuentas, y CMS básico. Actores: v
 - El plan gratuito de Render duerme por inactividad; no satisface un SLA de streaming.
 - Los medios locales no son un almacén escalable. No colocar archivos nuevos de vídeo en el repositorio a medida que crezca el catálogo.
 - El pool de PostgreSQL está limitado a cinco conexiones por instancia; al aumentar réplicas habrá que recalcular el presupuesto total de conexiones y probar carga.
+- Los dos ingresos comparten 12 intentos por IP en 15 minutos, incluidos los exitosos; PostgreSQL coordina el límite entre instancias y reinicios. Una red compartida puede bloquear temporalmente a usuarios legítimos. El límite depende de la IP confiable del proxy y no cubre el registro de cuentas ni la distribución de ataques entre muchas IP.
 - La conexión cifrada sin CA configurada no autentica el servidor de base de datos; activar validación de certificado para un entorno sensible.
 - La publicación de obras ajenas requiere derechos o autorización.
 

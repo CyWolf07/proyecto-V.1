@@ -7,6 +7,7 @@ import auth, { session } from './auth.js';
 import catalog from './catalog.js';
 import admin from './admin.js';
 import { loadConfig } from './config.js';
+import { pruneLoginAttempts } from './login-limit.js';
 
 const config = loadConfig();
 
@@ -46,4 +47,8 @@ app.use((error, _req, res, _next) => {
 
 const port = config.port;
 const server = app.listen(port, '0.0.0.0', () => console.log(`Kitsune escuchando en ${port}`));
+const pruneExpiredAttempts = () => pruneLoginAttempts(query)
+  .catch(error => console.error('No se pudieron limpiar los intentos de acceso vencidos:', error));
+pruneExpiredAttempts();
+setInterval(pruneExpiredAttempts, 60 * 60 * 1000).unref();
 process.on('SIGTERM', () => server.close(() => pool.end()));
