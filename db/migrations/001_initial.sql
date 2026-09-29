@@ -1,5 +1,15 @@
 create schema if not exists kitsune;
-revoke all on schema kitsune from public, anon, authenticated;
+revoke all on schema kitsune from public;
+do $$
+begin
+  -- Estos roles existen en Supabase, pero no en PostgreSQL estándar de Render.
+  if exists (select 1 from pg_roles where rolname = 'anon') then
+    execute 'revoke all on schema kitsune from anon';
+  end if;
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    execute 'revoke all on schema kitsune from authenticated';
+  end if;
+end $$;
 
 create table if not exists kitsune.users (
   id uuid primary key default gen_random_uuid(),

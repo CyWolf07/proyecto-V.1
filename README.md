@@ -1,6 +1,6 @@
 # Kitsune Streaming
 
-Plataforma de catálogo y tráilers de anime con API Node/Express, PostgreSQL en Supabase y panel administrativo. Esta versión sustituye las sesiones de demostración del navegador por autenticación y autorización del servidor.
+Plataforma de catálogo y tráilers de anime con API Node/Express, PostgreSQL en Render o Supabase y panel administrativo. Esta versión sustituye las sesiones de demostración del navegador por autenticación y autorización del servidor.
 
 ## Estado real
 
@@ -66,7 +66,7 @@ render.yaml         infraestructura declarativa de Render
 
 ## Seguridad y límites
 
-Las contraseñas de usuarios se almacenan con `scrypt` y sal aleatoria; las sesiones usan tokens opacos con hash en la base y cookie `HttpOnly`, `SameSite=Strict` y `Secure` en producción. El esquema `kitsune` es privado y se revocó su acceso a `anon` y `authenticated`; el servidor usa la conexión privada. Sin un archivo CA configurado, la conexión PostgreSQL va cifrada pero no verifica la identidad del servidor: para producción sensible, instale el CA de Supabase y configure `DATABASE_CA_FILE`.
+Las contraseñas de usuarios se almacenan con `scrypt` y sal aleatoria; las sesiones usan tokens opacos con hash en la base y cookie `HttpOnly`, `SameSite=Strict` y `Secure` en producción. El esquema `kitsune` es privado: se revoca el acceso de `PUBLIC` y, si existen, de los roles `anon` y `authenticated` de Supabase. Así la migración inicial también funciona en PostgreSQL de Render, donde esos dos roles no existen. El servidor usa la conexión privada. Sin un archivo CA configurado, la conexión PostgreSQL va cifrada pero no verifica la identidad del servidor: para producción sensible, instale el CA del proveedor y configure `DATABASE_CA_FILE`.
 
 Los ingresos normales y administrativos comparten un límite de **12 solicitudes por IP cada 15 minutos**. Cada solicitud consume un intento antes de validar el correo o la contraseña, incluso si el ingreso tiene éxito; el intento 13 recibe HTTP 429 y `Retry-After` hasta que venza la ventana. PostgreSQL guarda el contador bajo un hash de la IP y lo actualiza de forma atómica, por lo que el límite persiste tras reinicios y se comparte entre instancias. Los registros vencidos se eliminan al iniciar el servidor y cada hora. Si PostgreSQL no está disponible, los ingresos fallan en vez de saltarse el límite. La migración `004_login_attempts.sql` debe aplicarse antes de servir la API; el comando de inicio de Render ya ejecuta las migraciones.
 
