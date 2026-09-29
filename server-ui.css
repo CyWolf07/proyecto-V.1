@@ -5,4 +5,6 @@
 #animeVideo[hidden]{display:none}
 .stage .frame[hidden],.stage .shade[hidden],.stage .movie-title[hidden],.stage .quote[hidden],.stage .controls[hidden]{display:none}
 .cards article:focus-visible{outline:2px solid #f47521;outline-offset:3px}
+.admin-entry{display:block;margin:20px auto 0;padding:8px 12px;background:none;border:0;color:#f47521;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.admin-entry:focus-visible{outline:2px solid #f47521;outline-offset:3px}
 @media(max-width:760px){.cms-form{grid-template-columns:1fr}}
