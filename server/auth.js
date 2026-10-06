@@ -4,6 +4,7 @@ import { promisify } from 'node:util';
 import { query } from './db.js';
 import { loadConfig } from './config.js';
 import { createLoginLimit } from './login-limit.js';
+import { decodeTotpSecret, matchingTotpStep } from './totp.js';
 
 const config = loadConfig();
 
@@ -47,7 +48,7 @@ export async function session(req, _res, next) {
       const { rows } = await query(`select s.id,coalesce(u.role,s.role) as role,u.id as user_id,u.email,u.display_name,u.is_active
         from kitsune.sessions s left join kitsune.users u on u.id=s.user_id
         where s.token_hash=$1 and s.expires_at>now()`, [digest(raw)]);
-      req.session = rows[0] && (rows[0].user_id === null || rows[0].is_active) ? rows[0] : null;
+      req.session = rows[0] && (rows[0].user_id === null || (rows[0].is_active && rows[0].role !== 'admin')) ? rows[0] : null;
     }
     next();
   } catch (error) { next(error); }
@@ -79,6 +80,7 @@ router.post('/login', loginLimit, async (req, res) => {
   if (!rows[0] || !rows[0].is_active || !passwordMatches) {
     return res.status(401).json({ error: 'Credenciales incorrectas', field: !rows[0] ? 'email' : 'password' });
   }
+  if (rows[0].role === 'admin') return res.status(403).json({ error: 'Usa el ingreso administrativo configurado en el servidor' });
   await createSession(res, rows[0].id, rows[0].role);
   const { password_hash: _, is_active: __, ...user } = rows[0];
   res.json({ user });
@@ -91,6 +93,14 @@ router.post('/admin/login', loginLimit, async (req, res) => {
   const passwordMatches = equalSecret(password, config.adminPassword);
   if (!emailMatches || !passwordMatches) {
     return res.status(401).json({ error: 'Credenciales incorrectas', field: emailMatches ? 'password' : 'email' });
+  }
+  if (config.adminTotpSecret) {
+    const step = matchingTotpStep(decodeTotpSecret(config.adminTotpSecret), req.body?.totp);
+    if (step === null) return res.status(401).json({ error: 'Código de verificación inválido', field: 'totp' });
+    const accepted = await query(`insert into kitsune.totp_replay(identity,last_step) values ('env-admin',$1)
+      on conflict (identity) do update set last_step=excluded.last_step
+      where kitsune.totp_replay.last_step < excluded.last_step returning last_step`, [step]);
+    if (!accepted.rowCount) return res.status(401).json({ error: 'Código de verificación ya utilizado', field: 'totp' });
   }
   await createSession(res, null, 'admin');
   res.json({ role: 'admin' });

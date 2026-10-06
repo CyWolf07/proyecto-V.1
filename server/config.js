@@ -1,5 +1,6 @@
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const exampleValues = ['admin@example.com', 'replace-with-a-long-unique-password'];
+import { decodeTotpSecret } from './totp.js';
 
 function required(env, name) {
   const value = String(env[name] || '').trim();
@@ -33,6 +34,8 @@ export function loadConfig(env = process.env) {
 
   const adminEmail = String(env.ADMIN_EMAIL || '').trim().toLowerCase();
   const adminPassword = String(env.ADMIN_PASSWORD || '');
+  const adminTotpSecret = String(env.ADMIN_TOTP_SECRET || '').trim();
+  if (adminTotpSecret) decodeTotpSecret(adminTotpSecret);
   if (production) {
     required(env, 'ADMIN_EMAIL');
     required(env, 'ADMIN_PASSWORD');
@@ -52,6 +55,7 @@ export function loadConfig(env = process.env) {
     databaseUrl,
     adminEmail,
     adminPassword,
+    adminTotpSecret,
     port: positiveInteger(env.PORT, 'PORT', 4173),
     dbPoolMax: positiveInteger(env.DB_POOL_MAX, 'DB_POOL_MAX', 5),
   };

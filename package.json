@@ -3,15 +3,19 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
     "migrate": "node server/migrate.js",
-    "check": "node --check server/index.js && node --check server/auth.js && node --check server/catalog.js && node --check server/admin.js && node --check server/config.js && node --check server/login-limit.js && node --check server/migrate.js && node --check plataforma.js && node --check admin-tools.js && node --test"
+    "admin:totp": "node server/generate-totp.js",
+    "check": "node --check server/index.js && node --check server/auth.js && node --check server/catalog.js && node --check server/admin.js && node --check server/library.js && node --check server/cloudinary.js && node --check server/cloudinary-signatures.js && node --check server/totp.js && node --check server/config.js && node --check server/login-limit.js && node --check server/migrate.js && node --check plataforma.js && node --check admin-tools.js && node --test"
   },
   "dependencies": {
     "express": "5.2.1",
+    "hls.js": "1.7.3",
     "pg": "8.23.0"
   }
 }

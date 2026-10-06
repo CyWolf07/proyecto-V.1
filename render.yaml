@@ -20,6 +20,16 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
+      - key: ADMIN_TOTP_SECRET
+        sync: false
+      - key: PUBLIC_BASE_URL
+        value: https://kitsune-streaming.onrender.com
+      - key: CLOUDINARY_CLOUD_NAME
+        value: oozszqhz
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
 
 databases:
   - name: kitsune-postgres

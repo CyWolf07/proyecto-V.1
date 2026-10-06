@@ -6,6 +6,8 @@ import { query, pool } from './db.js';
 import auth, { session } from './auth.js';
 import catalog from './catalog.js';
 import admin from './admin.js';
+import library from './library.js';
+import { cloudinaryWebhook } from './cloudinary.js';
 import { loadConfig } from './config.js';
 import { pruneLoginAttempts } from './login-limit.js';
 
@@ -20,6 +22,7 @@ app.use((_req, res, next) => {
   next();
 });
 app.use('/assets', express.static(resolve(root, 'assets'), { maxAge: '1d', immutable: false }));
+app.get('/vendor/hls.min.js', (_req, res) => res.sendFile(resolve(root, 'node_modules', 'hls.js', 'dist', 'hls.min.js')));
 for (const file of ['plataforma.html','plataforma.css','plataforma.js','ui-fixes.css','admin-tools.css','admin-tools.js','server-ui.css','index.html','styles.css','app.js']) {
   app.get(`/${file}`, (_req, res) => res.sendFile(resolve(root, file)));
 }
@@ -28,7 +31,9 @@ app.get('/api/health', async (_req, res) => {
   try { await query('select 1'); res.json({ status: 'ok' }); }
   catch { res.status(503).json({ status: 'database_unavailable' }); }
 });
-app.use('/api', express.json({ limit: '64kb' }));
+app.use('/api', express.json({ limit: '64kb', verify: (req, _res, body) => {
+  if (req.path === '/v1/cloudinary/webhook') req.rawBody = Buffer.from(body);
+} }));
 app.use('/api', (req, res, next) => {
   if (['GET','HEAD','OPTIONS'].includes(req.method)) return next();
   const origin = req.get('origin');
@@ -36,7 +41,9 @@ app.use('/api', (req, res, next) => {
   next();
 });
 app.use('/api/v1', session);
+app.use('/api/v1/cloudinary', cloudinaryWebhook);
 app.use('/api/v1/auth', auth);
+app.use('/api/v1/me', library);
 app.use('/api/v1', catalog);
 app.use('/api/v1/admin', admin);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
