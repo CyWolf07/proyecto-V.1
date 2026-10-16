@@ -3,8 +3,20 @@
 .cms-form{grid-template-columns:1fr 90px 90px 1fr auto}
 .cms-form select{background:#090b0e;border:1px solid #34373d;color:#fff;padding:11px 13px}
 #animeVideo[hidden]{display:none}
+#animeVideo{display:block;width:100%;height:100%;object-fit:contain;background:#000}
+.video-quality{position:absolute;z-index:5;top:16px;right:16px;display:grid;grid-template-columns:auto minmax(105px,140px);align-items:center;gap:6px 10px;max-width:calc(100% - 32px);padding:10px 12px;background:#090b0ee8;border:1px solid #555;border-radius:8px;box-shadow:0 4px 16px #0008;font-size:13px}
+.video-quality label{font-weight:700;white-space:nowrap}
+.video-quality select{background:#17191d;border:1px solid #777;color:#fff;padding:7px 10px;border-radius:4px;cursor:pointer}
+.video-quality select:disabled{opacity:.7}
+.video-quality select:focus-visible{outline:2px solid #f47521;outline-offset:2px}
+.video-quality span{grid-column:1/-1;color:#d0d1d3;font-size:11px}
 .stage .frame[hidden],.stage .shade[hidden],.stage .movie-title[hidden],.stage .quote[hidden],.stage .controls[hidden]{display:none}
 .cards article:focus-visible{outline:2px solid #f47521;outline-offset:3px}
+.cards{display:block}
+.catalog-group{margin:0 0 42px}
+.catalog-group h2{font-size:clamp(20px,2.4vw,28px);margin:0 0 18px}
+.cards-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:25px 14px}
+@media(max-width:760px){.cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .admin-entry{display:block;margin:20px auto 0;padding:8px 12px;background:none;border:0;color:#f47521;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .admin-entry:focus-visible{outline:2px solid #f47521;outline-offset:3px}
 .library-shortcuts{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 4px}.library-shortcuts button,.library-action{background:#17191d;border:1px solid #f47521;color:#f47521;padding:10px 14px}.library-shortcuts button:hover,.library-action:hover{background:#2a1b13}

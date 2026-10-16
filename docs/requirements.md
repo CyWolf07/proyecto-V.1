@@ -10,12 +10,12 @@ Estado comprobado en el proyecto para RF01–RF24. «Parcial» significa que exi
 | RF04 | Pendiente | Recuperación por correo requiere proveedor de envío y flujo de tokens. |
 | RF05 | Pendiente | No se verifica la propiedad del correo al registrarse. |
 | RF06 | Parcial | El administrador configurado por variables puede usar TOTP con `ADMIN_TOTP_SECRET`; falta imponerlo a cuentas privilegiadas de base de datos y definir `EDITOR`. |
-| RF07 | Parcial | Catálogo por título y género; no hay filtro público por estado porque solo se exponen series publicadas. |
+| RF07 | Parcial | Catálogo por título y género; las series publicadas se agrupan por disponibilidad de tráiler («Con tráiler disponible» o «Próximamente»). No hay filtro público por estado porque solo se exponen series publicadas. |
 | RF08 | Parcial | La ficha muestra temporadas y episodios publicados, si los hay. |
 | RF09 | Funcional | Búsqueda por texto de título en catálogo. |
 | RF10 | Parcial | Hay secciones de últimos episodios, populares, recomendados y continuar viendo; esta última solo muestra progreso guardado y todavía no reanuda video. |
 | RF11 | Parcial | Prototipo HLS mediante Cloudinary Free y hls.js; falta configurar credenciales y probar con un MP4 autorizado. |
-| RF12 | Parcial | El perfil `hd` de Cloudinary ofrece adaptación HLS; no está verificada la disponibilidad exacta de 480p/720p/1080p para cada fuente. |
+| RF12 | Parcial | El tráiler MP4 incluido permite elegir 480p o 720p reales; los episodios HLS permiten elegir las variantes presentes en el manifiesto o dejar la adaptación automática con hls.js. HLS nativo queda bajo control del navegador. No se promete 1080p cuando la fuente no lo ofrece; falta probar la cadena HLS con un episodio real. |
 | RF13 | Parcial | El reproductor envía progreso a PostgreSQL cada diez segundos y al pausar; falta probarlo con video real. |
 | RF14 | Parcial | El reproductor consulta el progreso al abrir el episodio y busca esa posición; falta probarlo con video real. |
 | RF15 | Pendiente | No hay pistas múltiples de audio o subtítulos por episodio. |

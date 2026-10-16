@@ -3,6 +3,8 @@ const loginButton = document.querySelector('#loginButton');
 const sessionBox = document.querySelector('#session');
 const cards = document.querySelector('#cards');
 const stage = document.querySelector('#stage');
+const qualitySelect = document.querySelector('#qualitySelect');
+const qualityStatus = document.querySelector('#qualityStatus');
 const video = document.createElement('video');
 video.id = 'animeVideo';
 video.controls = true;
@@ -16,8 +18,59 @@ let history = [];
 let selectedSeries = null;
 let trailerTimer;
 let hlsPlayer = null;
+let trailerSources = [];
+let playbackGeneration = 0;
+let trailerSwitchGeneration = 0;
 let currentEpisodeId = null;
 let lastProgressSave = 0;
+
+function resetQuality() {
+  qualitySelect.replaceChildren();
+  addQualityOption('none', 'Sin video');
+  qualitySelect.disabled = true;
+  qualityStatus.textContent = 'Elige un tráiler o episodio';
+  trailerSources = [];
+}
+function addQualityOption(value, label) {
+  const option = document.createElement('option');
+  option.value = String(value);
+  option.textContent = label;
+  qualitySelect.append(option);
+}
+function trailerRenditions(path) {
+  if (path === '/assets/trailers/mushoku-tensei-season-3.mp4') return [
+    { label: '480p', url: '/assets/trailers/mushoku-tensei-season-3-480p.mp4' },
+    { label: '720p (original)', url: path },
+  ];
+  return [{ label: 'Original', url: path }];
+}
+function loadTrailerSource(source, preservePosition = false) {
+  const position = preservePosition && Number.isFinite(video.currentTime) ? video.currentTime : 0;
+  const wasPlaying = preservePosition ? !video.paused : true;
+  const generation = playbackGeneration;
+  const switchGeneration = ++trailerSwitchGeneration;
+  video.pause();
+  video.src = source.url;
+  video.load();
+  video.addEventListener('loadedmetadata', () => {
+    if (generation !== playbackGeneration || switchGeneration !== trailerSwitchGeneration) return;
+    if (position > 0) video.currentTime = Number.isFinite(video.duration)
+      ? Math.min(position, Math.max(0, video.duration - 0.1)) : position;
+    if (wasPlaying) void video.play().catch(() => {});
+  }, { once: true });
+  qualityStatus.textContent = `${source.label} seleccionada`;
+}
+qualitySelect.addEventListener('change', () => {
+  if (hlsPlayer) {
+    const level = Number(qualitySelect.value);
+    if (level !== -1 && (!Number.isInteger(level) || level < 0 || level >= hlsPlayer.levels.length)) return;
+    hlsPlayer.nextLevel = level;
+    qualityStatus.textContent = level === -1 ? 'Calidad automática' : `${qualitySelect.selectedOptions[0].textContent} seleccionada`;
+  } else {
+    const source = trailerSources[Number(qualitySelect.value)];
+    if (source) loadTrailerSource(source, true);
+  }
+});
 
 async function api(path, options = {}) {
   const response = await fetch(`/api/v1${path}`, {
@@ -153,21 +206,31 @@ function drawCatalog() {
   const genre = document.querySelector('.filters .on')?.textContent;
   const filtered = series.filter(item => (!term || `${item.title} ${item.genres.join(' ')}`.toLocaleLowerCase().includes(term)) && (genre === 'Todos' || item.genres.includes(genre)));
   cards.replaceChildren();
-  if (!filtered.length) { const empty = document.createElement('p'); empty.textContent = 'No encontramos series con esos filtros.'; cards.appendChild(empty); }
-  for (const item of filtered) {
+  if (!filtered.length) { const empty = document.createElement('p'); empty.textContent = 'No encontramos series con esos filtros.'; cards.appendChild(empty); return; }
+  for (const [title, items] of [
+    ['Con tráiler disponible', filtered.filter(item => Boolean(item.trailer_path))],
+    ['Próximamente', filtered.filter(item => !item.trailer_path)],
+  ]) {
+    if (!items.length) continue;
+    const section = document.createElement('section'); section.className = 'catalog-group';
+    const heading = document.createElement('h2'); heading.textContent = `${title} (${items.length})`;
+    const grid = document.createElement('div'); grid.className = 'cards-grid';
+    section.append(heading, grid); cards.append(section);
+    for (const item of items) {
     const card = document.createElement('article');
     card.tabIndex = 0;
     card.setAttribute('role', 'button');
     card.setAttribute('aria-label', `Abrir ${item.title}`);
     const cover = document.createElement('div'); cover.className = 'cover series-cover';
     const image = document.createElement('img'); image.src = item.poster_path || '/assets/hero-astral-edge.png'; image.alt = `Portada de ${item.title}`; image.loading = 'lazy'; cover.appendChild(image);
-    const tag = document.createElement('span'); tag.textContent = item.trailer_path || item.slug === 'astral-edge' ? '▶ VER TRÁILER' : 'TRÁILER PRÓXIMAMENTE'; cover.appendChild(tag);
+    const tag = document.createElement('span'); tag.textContent = item.trailer_path ? '▶ VER TRÁILER' : 'PRÓXIMAMENTE'; cover.appendChild(tag);
     const title = document.createElement('h3'); title.textContent = item.title;
     const genres = document.createElement('p'); genres.textContent = item.genres.join(' · ');
     card.append(cover, title, genres);
     card.addEventListener('click', () => openSeries(item));
     card.addEventListener('keydown', event => { if (event.key === 'Enter') openSeries(item); });
-    cards.appendChild(card);
+    grid.appendChild(card);
+    }
   }
 }
 async function loadCatalog() {
@@ -202,9 +265,11 @@ document.querySelectorAll('.filters button').forEach(button => button.addEventLi
 }));
 function openSeries(item) {
   void saveProgress();
+  playbackGeneration++;
   selectedSeries = item;
   currentEpisodeId = null;
   hlsPlayer?.destroy(); hlsPlayer = null;
+  resetQuality();
   go('player');
   const info = document.querySelector('.episode-info article');
   info.querySelector('h1').textContent = item.title;
@@ -239,38 +304,75 @@ function openSeries(item) {
     animation.forEach(el => el.hidden = true);
     video.hidden = false;
     video.poster = item.poster_path || '';
-    video.src = item.trailer_path;
-    video.play().catch(() => {});
+    trailerSources = trailerRenditions(item.trailer_path);
+    qualitySelect.replaceChildren();
+    trailerSources.forEach((source, index) => addQualityOption(index, source.label));
+    qualitySelect.value = String(trailerSources.length - 1);
+    qualitySelect.disabled = trailerSources.length < 2;
+    loadTrailerSource(trailerSources[trailerSources.length - 1]);
   } else {
-    video.pause(); video.hidden = true;
+    video.pause(); video.removeAttribute('src'); video.load(); video.hidden = true;
+    qualityStatus.textContent = 'No hay video para ajustar en este tráiler';
     animation.forEach(el => el.hidden = false);
     stage.querySelector('.frame').style.backgroundImage = `url("${item.poster_path || '/assets/hero-astral-edge.png'}")`;
     if (item.slug === 'astral-edge') document.querySelector('#play').click();
   }
 }
 async function playEpisode(episodeId) {
+  const generation = ++playbackGeneration;
+  resetQuality();
+  qualityStatus.textContent = 'Cargando calidades del episodio...';
   try {
     const [{ url }, progress] = await Promise.all([
       api(`/episodes/${episodeId}/playback`),
       currentUser?.id ? api(`/me/progress/${episodeId}`) : Promise.resolve({ positionSeconds: 0 }),
     ]);
+    if (generation !== playbackGeneration) return;
     hlsPlayer?.destroy(); hlsPlayer = null;
+    video.pause();
     currentEpisodeId = episodeId;
-    video.pause(); video.removeAttribute('src'); video.load();
+    video.removeAttribute('src'); video.load();
     stage.querySelectorAll('.frame,.shade,.movie-title,.quote,.controls').forEach(el => { el.hidden = true; });
     video.hidden = false;
     video.addEventListener('loadedmetadata', () => {
       if (currentEpisodeId === episodeId && progress.positionSeconds > 0) video.currentTime = progress.positionSeconds;
     }, { once: true });
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = url; await video.play();
-    }
-    else if (window.Hls?.isSupported()) {
+    if (window.Hls?.isSupported()) {
       hlsPlayer = new window.Hls();
-      hlsPlayer.on(window.Hls.Events.MANIFEST_PARSED, () => { void video.play().catch(() => {}); });
-      hlsPlayer.loadSource(url); hlsPlayer.attachMedia(video);
+      const player = hlsPlayer;
+      player.on(window.Hls.Events.MANIFEST_PARSED, (_event, data) => {
+        if (generation !== playbackGeneration) return;
+        qualitySelect.replaceChildren();
+        if (data.levels.length > 1) addQualityOption(-1, 'Automática');
+        data.levels.forEach((level, index) => {
+          const label = level.height ? `${level.height}p` : `Nivel ${index + 1}`;
+          addQualityOption(index, label);
+        });
+        qualitySelect.value = data.levels.length > 1 ? '-1' : '0';
+        qualitySelect.disabled = data.levels.length < 2;
+        qualityStatus.textContent = data.levels.length > 1 ? 'Calidad automática' : 'Única calidad disponible';
+        void video.play().catch(() => {});
+      });
+      player.on(window.Hls.Events.LEVEL_SWITCHED, (_event, data) => {
+        if (generation !== playbackGeneration) return;
+        const height = player.levels[data.level]?.height;
+        qualityStatus.textContent = `${qualitySelect.value === '-1' ? 'Automática' : 'Seleccionada'} · ${height ? `${height}p` : `nivel ${data.level + 1}`} activa`;
+      });
+      player.loadSource(url); player.attachMedia(video);
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      qualitySelect.replaceChildren();
+      addQualityOption('native', 'Automática (navegador)');
+      qualitySelect.disabled = true;
+      qualityStatus.textContent = 'Este navegador gestiona la calidad HLS';
+      video.src = url; await video.play();
     } else throw new Error('Este navegador no admite reproducción HLS');
-  } catch (error) { alert(error.message); }
+  } catch (error) {
+    if (generation === playbackGeneration) {
+      resetQuality();
+      qualityStatus.textContent = 'No se pudieron cargar las calidades';
+      alert(error.message);
+    }
+  }
 }
 async function saveProgress() {
   if (!currentEpisodeId || !currentUser?.id || !Number.isFinite(video.currentTime)) return;
